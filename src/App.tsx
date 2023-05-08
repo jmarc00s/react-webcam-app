@@ -1,35 +1,62 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import "./App.css";
+import { useEffect, useRef } from "react";
 
-function App() {
-  const [count, setCount] = useState(0)
+export const App = () => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const getCams = async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+      });
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play();
+        };
+      }
+    };
+
+    getCams();
+  }, []);
+
+  const handleScreenShotClick = () => {
+    const context = canvasRef.current?.getContext("2d");
+    context?.drawImage(videoRef.current as CanvasImageSource, 0, 0, 1280, 720);
+    const data = canvasRef.current?.toDataURL("image/png");
+    download(data!);
+  };
+
+  const download = (base64: string) => {
+    const link = document.createElement("a");
+    link.download = "photo.png";
+    link.href = base64;
+    link.click();
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
-
-export default App
+    <div
+      style={{
+        display: "flex",
+        minHeight: "100vh",
+        alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "column",
+        gap: "1rem",
+      }}
+    >
+      <h1>React photo app</h1>
+      <video ref={videoRef} id="cam" />
+      <button onClick={handleScreenShotClick}>Take screenshot</button>
+      <canvas
+        style={{ display: "none" }}
+        id="canvas"
+        ref={canvasRef}
+        width={1280}
+        height={720}
+      ></canvas>
+    </div>
+  );
+};
