@@ -3,12 +3,13 @@ import { useEffect, useRef } from "react";
 
 export const App = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const width = 1280;
+  const height = 720;
 
   useEffect(() => {
     const getCams = async () => {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
+        video: { width, height },
       });
 
       if (videoRef.current) {
@@ -23,9 +24,19 @@ export const App = () => {
   }, []);
 
   const handleScreenShotClick = () => {
-    const context = canvasRef.current?.getContext("2d");
-    context?.drawImage(videoRef.current as CanvasImageSource, 0, 0, 1280, 720);
-    const data = canvasRef.current?.toDataURL("image/png");
+    const canvas = document.createElement("canvas");
+    canvas.setAttribute("width", width.toString());
+    canvas.setAttribute("height", height.toString());
+
+    const context = canvas?.getContext("2d");
+    context?.drawImage(
+      videoRef.current as CanvasImageSource,
+      0,
+      0,
+      width,
+      height
+    );
+    const data = canvas?.toDataURL("image/png");
     download(data!);
   };
 
@@ -50,13 +61,6 @@ export const App = () => {
       <h1>React photo app</h1>
       <video ref={videoRef} id="cam" />
       <button onClick={handleScreenShotClick}>Take screenshot</button>
-      <canvas
-        style={{ display: "none" }}
-        id="canvas"
-        ref={canvasRef}
-        width={1280}
-        height={720}
-      ></canvas>
     </div>
   );
 };
